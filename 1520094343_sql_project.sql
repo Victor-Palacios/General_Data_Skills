@@ -106,8 +106,8 @@ Order by descending cost,
 and do not use any subqueries. */
 
 SELECT name, CONCAT(surname, " " , firstname) as member,
-       CASE WHEN Bookings.memid != 0 AND (slots * membercost) > 30.0 THEN (slots * membercost)
-       WHEN Bookings.memid = 0 AND (slots * guestcost) > 30.0 THEN (slots * guestcost)
+       CASE WHEN Bookings.memid != 0 THEN (slots * membercost)
+       WHEN Bookings.memid = 0 THEN (slots * guestcost)
        END
        AS cost
 FROM Bookings
@@ -116,13 +116,26 @@ FROM Bookings
   JOIN Facilities 
   ON Bookings.facid = Facilities.facid
     WHERE Bookings.starttime LIKE '2012-09-14%'
+    HAVING cost > 30
     ORDER BY cost DESC
-    
---producing null values for reasons unknown to me
-
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
 
+SELECT sub.facilityname, sub.membername, sub.cost
+
+FROM (
+SELECT f.name AS facilityname, CONCAT( m.firstname,  ' ', m.surname ) AS membername, 
+CASE WHEN m.firstname =  'GUEST' THEN (f.guestcost * b.slots)
+WHEN m.firstname !=  'GUEST' THEN (f.membercost * b.slots)
+END AS cost
+FROM Bookings b
+LEFT JOIN Members m ON b.memid = m.memid
+LEFT JOIN Facilities f ON f.facid = b.facid
+WHERE b.starttime LIKE  '2012-09-14%'
+) AS sub
+
+WHERE sub.cost > 30
+ORDER BY cost DESC
 
 /* Q10: Produce a list of facilities with a total revenue less than 1000.
 The output of facility name and total revenue, sorted by revenue. Remember
