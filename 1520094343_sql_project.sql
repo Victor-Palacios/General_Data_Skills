@@ -140,4 +140,20 @@ ORDER BY cost DESC
 /* Q10: Produce a list of facilities with a total revenue less than 1000.
 The output of facility name and total revenue, sorted by revenue. Remember
 that there's a different cost for guests and members! */
-SELECT name
+
+
+SELECT sub.name, sub.revenue
+
+FROM (
+SELECT name,
+       CASE WHEN Bookings.memid != 0 THEN (slots * membercost)
+       WHEN Bookings.memid = 0 THEN (slots * guestcost)
+       END
+       AS revenue
+FROM Bookings
+  JOIN Facilities 
+  ON Bookings.facid = Facilities.facid
+  ORDER BY revenue DESC) AS sub
+
+GROUP BY sub.name
+ORDER BY sub.revenue DESC
